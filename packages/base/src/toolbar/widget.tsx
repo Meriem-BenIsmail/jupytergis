@@ -100,6 +100,7 @@ export class ToolbarWidget extends ReactiveToolbar {
 
       this.addItem('separator2', new Separator());
 
+      let NewSubMenu: Menu | null = null;
       const NewButton = new ToolbarButton({
         icon: addIcon,
         noFocusOnClick: false,
@@ -108,8 +109,14 @@ export class ToolbarWidget extends ReactiveToolbar {
             return;
           }
 
+          if (NewSubMenu) {
+            NewSubMenu.dispose();
+            NewSubMenu = null;
+            return;
+          }
+
           const bbox = NewButton.node.getBoundingClientRect();
-          const NewSubMenu = new Menu({ commands: options.commands });
+          NewSubMenu = new Menu({ commands: options.commands });
           NewSubMenu.title.label = 'New Layer';
 
           NewSubMenu.addItem({
@@ -146,6 +153,21 @@ export class ToolbarWidget extends ReactiveToolbar {
           });
 
           NewSubMenu.open(bbox.x, bbox.bottom);
+
+          const handleDocumentClick = (event: MouseEvent) => {
+            if (NewSubMenu) {
+              NewSubMenu.dispose();
+              NewSubMenu = null;
+              document.removeEventListener('click', handleDocumentClick);
+            }
+          };
+
+          document.addEventListener('click', handleDocumentClick);
+
+          NewSubMenu.disposed.connect(() => {
+            NewSubMenu = null;
+            document.removeEventListener('click', handleDocumentClick);
+          });
         }
       });
 
